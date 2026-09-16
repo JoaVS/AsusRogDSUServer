@@ -28,16 +28,22 @@ async def main():
         print("  lectura accel:", None if not a else (a.acceleration_x, a.acceleration_y, a.acceleration_z))
 
     print()
-    print("--- Servicio de sensores de Windows ---")
-    print(powershell("Get-Service SensorService | Format-List Name, Status, StartType"))
-
-    print("--- Dispositivos clase 'Sensors' (Administrador de dispositivos) ---")
-    print(powershell("Get-PnpDevice -Class Sensors -ErrorAction SilentlyContinue | Format-List FriendlyName, Status, InstanceId"))
-
-    print("--- Posibles sensores HID (InvenSense/Bosch/IMU/Accel/Gyro) ---")
+    print("--- Servicios de sensores de Windows ---")
     print(powershell(
-        "Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object { "
-        "$_.InstanceId -match 'HID' -and $_.FriendlyName -match 'Sensor|InvenSense|Bosch|IMU|Accel|Gyro' } "
+        "Get-Service SensorService, SensrSvc, SensorDataService -ErrorAction SilentlyContinue "
+        "| Format-List Name, Status, StartType"
+    ))
+
+    print("--- Dispositivos con problemas o desconocidos (Otros dispositivos) ---")
+    print(powershell(
+        "Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue "
+        "| Where-Object { $_.Status -ne 'OK' } "
+        "| Format-List FriendlyName, Status, Class, InstanceId"
+    ))
+
+    print("--- Dispositivos HID (para identificar el sensor) ---")
+    print(powershell(
+        "Get-PnpDevice -PresentOnly -Class HIDClass -ErrorAction SilentlyContinue "
         "| Format-List FriendlyName, Status, InstanceId"
     ))
 
