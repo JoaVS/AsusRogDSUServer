@@ -45,7 +45,8 @@ async def main():
     print(powershell(
         "Get-PnpDevice -InstanceId 'ACPI\\BOSC0200\\1' -PresentOnly -ErrorAction SilentlyContinue "
         "| Get-PnpDeviceProperty -KeyName DEVPKEY_Device_ProblemCode, DEVPKEY_Device_ProblemStatus, "
-        "DEVPKEY_Device_DriverInfPath, DEVPKEY_Device_DriverDesc, DEVPKEY_Device_HardwareIds "
+        "DEVPKEY_Device_DriverInfPath, DEVPKEY_Device_DriverDesc, DEVPKEY_Device_DriverVersion, "
+        "DEVPKEY_Device_HardwareIds "
         "| Select-Object KeyName, Data | Format-List"
     ))
 
