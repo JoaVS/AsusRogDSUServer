@@ -41,6 +41,14 @@ async def main():
         "| Format-List FriendlyName, Status, Class, InstanceId"
     ))
 
+    print("--- Detalle del sensor Bosch (codigo de error, driver, IDs) ---")
+    print(powershell(
+        "Get-PnpDevice -InstanceId 'ACPI\\BOSC0200\\1' -PresentOnly -ErrorAction SilentlyContinue "
+        "| Get-PnpDeviceProperty -KeyName DEVPKEY_Device_ProblemCode, DEVPKEY_Device_ProblemStatus, "
+        "DEVPKEY_Device_DriverInfPath, DEVPKEY_Device_DriverDesc, DEVPKEY_Device_HardwareIds "
+        "| Select-Object KeyName, Data | Format-List"
+    ))
+
     print("--- Dispositivos HID (para identificar el sensor) ---")
     print(powershell(
         "Get-PnpDevice -PresentOnly -Class HIDClass -ErrorAction SilentlyContinue "
