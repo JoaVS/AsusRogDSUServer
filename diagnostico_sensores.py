@@ -1,24 +1,19 @@
 import asyncio
+import subprocess
 import importlib.metadata
-import winsdk
 from winsdk.windows.devices.sensors import Gyrometer, Accelerometer
-from winsdk.windows.devices.enumeration import DeviceInformation
+
+
+def powershell(command):
+    out = subprocess.run(
+        ["powershell", "-NoProfile", "-Command", command],
+        capture_output=True, text=True
+    )
+    return (out.stdout + out.stderr).strip()
 
 
 async def main():
     print(f"winsdk '{importlib.metadata.version('winsdk')}'")
-
-    print("--- Dispositivos de la clase Sensor (Windows) ---")
-    selector = 'System.Devices.InterfaceClassGuid:="{' + "c0183a8f-fd21-4e8a-8955-ac126a29cccb" + '}"'
-    try:
-        devices = await DeviceInformation.find_all_async(selector)
-        if not devices:
-            print("  Ningun sensor registrado en Windows.")
-        for d in devices:
-            print(f"  [{d.name}] id={d.id}")
-    except Exception as e:
-        print(f"  Error enumerando: {e}")
-    print()
 
     gyro = Gyrometer.get_default()
     accel = Accelerometer.get_default()
@@ -27,15 +22,23 @@ async def main():
 
     if gyro:
         g = gyro.get_current_reading()
-        if g:
-            print("  lectura gyro:", g.angular_velocity_x, g.angular_velocity_y, g.angular_velocity_z)
-        else:
-            print("  lectura gyro: None")
+        print("  lectura gyro:", None if not g else (g.angular_velocity_x, g.angular_velocity_y, g.angular_velocity_z))
     if accel:
         a = accel.get_current_reading()
-        if a:
-            print("  lectura accel:", a.acceleration_x, a.acceleration_y, a.acceleration_z)
-        else:
-            print("  lectura accel: None")
+        print("  lectura accel:", None if not a else (a.acceleration_x, a.acceleration_y, a.acceleration_z))
+
+    print()
+    print("--- Servicio de sensores de Windows ---")
+    print(powershell("Get-Service SensorService | Format-List Name, Status, StartType"))
+
+    print("--- Dispositivos clase 'Sensors' (Administrador de dispositivos) ---")
+    print(powershell("Get-PnpDevice -Class Sensors -ErrorAction SilentlyContinue | Format-List FriendlyName, Status, InstanceId"))
+
+    print("--- Posibles sensores HID (InvenSense/Bosch/IMU/Accel/Gyro) ---")
+    print(powershell(
+        "Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object { "
+        "$_.InstanceId -match 'HID' -and $_.FriendlyName -match 'Sensor|InvenSense|Bosch|IMU|Accel|Gyro' } "
+        "| Format-List FriendlyName, Status, InstanceId"
+    ))
 
 asyncio.run(main())
