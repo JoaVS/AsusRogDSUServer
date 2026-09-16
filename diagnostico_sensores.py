@@ -5,27 +5,20 @@ from winsdk.windows.devices.sensors import Gyrometer, Accelerometer
 from winsdk.windows.devices.enumeration import DeviceInformation
 
 
-async def list_class_devices(selector, label):
-    print(f"--- {label} ---")
+async def main():
+    print(f"winsdk '{importlib.metadata.version('winsdk')}'")
+
+    print("--- Dispositivos de la clase Sensor (Windows) ---")
+    selector = 'System.Devices.InterfaceClassGuid:="{' + "c0183a8f-fd21-4e8a-8955-ac126a29cccb" + '}"'
     try:
         devices = await DeviceInformation.find_all_async(selector)
         if not devices:
-            print("  Ningun dispositivo encontrado en esta clase.")
+            print("  Ningun sensor registrado en Windows.")
         for d in devices:
             print(f"  [{d.name}] id={d.id}")
     except Exception as e:
         print(f"  Error enumerando: {e}")
     print()
-
-
-async def main():
-    print(f"winsdk '{importlib.metadata.version('winsdk')}'")
-
-    for sensor_class, selector in (
-        (Gyrometer, Gyrometer.get_device_selector()),
-        (Accelerometer, Accelerometer.get_device_selector()),
-    ):
-        await list_class_devices(selector, sensor_class.__name__)
 
     gyro = Gyrometer.get_default()
     accel = Accelerometer.get_default()
